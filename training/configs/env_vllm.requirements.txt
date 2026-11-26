@@ -1,0 +1,11 @@
+# Separate frozen-reader environment, Python 3.12. Torch CUDA wheels are installed
+# first by setup_vllm_env.sh; never install these into the OneJev training environment.
+torch==2.11.0+cu129
+torchvision==0.26.0+cu129
+torchaudio==2.11.0+cu129
+torchcodec==0.16.0+cu129
+transformers==5.17.0
+tokenizers==0.23.2
+numpy==2.3.5
+pillow==12.3.0
+vllm @ https://github.com/vllm-project/vllm/releases/download/v0.26.0/vllm-0.26.0+cu129-cp38-abi3-manylinux_2_28_x86_64.whl#sha256=6ce4ca30616f0a35810391015622b197a7b8b267ed27f8716f0789db79ff578b

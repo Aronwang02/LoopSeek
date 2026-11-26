@@ -1,0 +1,33 @@
+# The paper's inference settings (System I with the released adapters, System II = Qwen3-VL-8B), over the defaults:
+#   --config configs/default.yaml configs/loopseek.yaml
+# K = 32 frames per question: K_a = 24 picked from K_o = 96 overview frames, plus K_d = 8 kept by the search.
+video:
+  global_frames: 96             # one shared 96-frame overview: controller, locator at the root, keep / where, pick-24 scores
+  refine_spacing_s: 10          # locator context below the root: one frame per 10 s of the parent window, 16..64 frames
+  refine_frames_max: 64
+  encoder_frame_cap: 1024
+policy:                         # inference speedups A1-A4, V1, V2 (same decisions up to near ties)
+  one_pass_single: true         # A2
+  suffix_batch_max: 16          # A4
+  merge_lora_inference: true    # A1
+  static_prefix_cache_max: 8
+  sort_suffixes: true           # V1
+  shared_prefix_attn: true      # V2
+  merge_lora_per_role: false    # E1: one folded copy of the base weights per role (faster role switches, more GPU
+                                # memory: three copies of OneJev-4B); off so that one GPU of 40-80 GB suffices
+  compile_norms: false          # F1: torch.compile of the RMSNorm forwards
+budget:
+  answer_uniform: 24            # 24 answer frames + 8 kept, picks of 4 out of 32 candidates
+  kept_frames: 8
+  frames_per_inspect: 4
+  frame_candidates: 32
+  pick_answer_k: 24             # the verifier scores the 96 overview frames; the top 24 replace the uniform answer frames
+  pick_answer_apply: true
+  verifier_q3: false
+  verifier_q3_where_joint: false
+  verifier_keep_where_joint: true   # below the root: per-frame keep and "where" in one forward; where = state after keep
+  where_wording: v2             # "where" options worded like the training labels ("of that range")
+  where_window_n: 32            # "where" sees the 32 inspection candidates
+  verifier_overview_question: null
+  share_cap_per_place: null
+  verifier_shuffle_key: sample  # option orders seeded by the sample id (paired evaluations)

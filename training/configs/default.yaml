@@ -1,0 +1,228 @@
+# Jev long-video agent: the single config of this repo (merged 2026-10-06 from the jev_video_fullft stack
+# default.yaml + v2_f8.yaml + q35_native.yaml + v3_b32.yaml + v3_ctrlver_b16.yaml + v3_ctrlver_loc_b16.yaml + v3_verq3_b16.yaml + v3_long_b32.yaml).
+# Paths are relative to the repo root; model paths/revisions come from configs/model_paths.json
+# (scripts/download_models.py). Per-run changes: --set key.sub=value.
+project:
+  name: jev_video
+  wandb_entity: null
+  wandb_project: jev-long-video      # 2026-10-06: separate project for the long-video pipeline
+  wandb_mode: online           # falls back to offline when not logged in / no network (wandb sync later)
+  seed: 17
+paths:
+  videos_root: data/videos
+  features_root: data/features
+  manifest_dir: data/manifests
+  runs_root: runs
+models:
+  reader:
+    path: null
+    revision: null
+  reader_qwen3vl8b:
+    path: null
+    revision: null
+  siglip2:
+    path: null
+    revision: null
+  nanojev:
+    path: null
+    revision: null
+  qwen3_0p6b:
+    path: null
+    revision: null
+  qwen35_4b:
+    path: null
+    revision: null
+  onejev_4b:                   # OmniJev/OneJev-4B (policy init, letter readout)
+    path: null
+    revision: null
+  qwen35_9b:
+    path: null
+    revision: null
+video:
+  global_frames: 16
+  pool_grid: 2
+  refine_frames: 16            # locator context inside an interval (window tree: 4 per quarter); root uses the overview
+  feature_cache_videos: 64      # videos whose frame tokens stay in memory per process (LRU; ~100-300 MB each)
+  encoder_frame_cap: 512        # frames Jev may encode per episode (window tree: ~48 new frames per window)
+  decode_max_side: 640
+budget:
+  max_turns: 24                # total actions (REFINE / SWITCH / UP / INSPECT)
+  actions:                     # window tree; LOCALIZE_GLOBAL only for window_tree: false
+  - REFINE_LOCAL               # down: an unvisited child (at the root: a level-1 window)
+  - SWITCH_LOCAL               # same level: an unvisited sibling
+  - UP                         # back to the parent (level >= 2)
+  - INSPECT_FRAMES
+  window_tree: true            # strict window tree, see src/env/episode_v3.py
+  tree_quarters_only: true     # children = the 4 quarters (no halves): a partition, siblings never overlap
+  tree_root_inspect: false     # no inspection at the root (the first action is REFINE, forced)
+  inspect_margin: 0.125        # inspection candidates from the active window widened by 1/8 of its length on each side
+  windows_per_level: null      # optional cap on windows entered under one parent (null = off; total budget only)
+  inspections_per_window: null # optional cap on inspection attempts per window (null = off)
+  frame_candidates: 32
+  frames_per_inspect: 8
+  reader_retained_frames: 32
+  min_window_sec: 1.0
+  path_tokens_soft: 100000
+  path_tokens_hard: 12000
+  max_observation_chars: 600
+  nav_moves: null              # no separate navigation budget (window tree: total actions only)
+  max_inspections: 2
+  kept_frames: 16               # kept-frame cap (per-frame verifier); final set = overview + these
+  selection: c
+  mask_radius: 1
+  refine_exclude_active: true
+  verifier: true
+  verifier_cuts:
+  - 0.25
+  - 0.5
+  - 0.8
+  verifier_tau: 1.01
+  label_pE: false
+  verifier_per_frame: true     # the verifier keeps / rejects every inspected frame (kept budget = max_inspections x frames_per_inspect)
+  keep_frame_tau: 0.5          # keep a frame iff P(it shows evidence) >= this
+  verifier_frame_joint: true   # one grouped decision per batch (each frame's yes/no pair normalized alone; one prefix forward)
+  verifier_frame_oracle_pad: null   # seconds; s1 sets this to evidence_pad (3); null uses the model verifier
+  record_verifier_inputs: false   # store the per-frame and "where" verifier inputs in the trajectories (verifier_frame /
+                                  # verifier_where SFT rows, labels from key_spans)
+  verifier_q3: false             # Q3 (the verifier's answerability tier) at the overview and after every inspection.
+                                 # false: no Q3 anywhere and no answerer labels for it; the controller's verifier line
+                                 # is "kept m of n frames" and "where" is asked on its own
+  verifier_q3_where_joint: true   # with verifier_q3: Q3 after an inspection and the next turn's "where" question in one forward
+  static_prefix_first: true   # task / question / options / overview frames first (static head for the KV cache)
+  where_window_frames: true    # the "where" question also sees 16 frames of the active window's inspection range
+  verifier_where: true         # before each controller turn (active interval != full video): where is the evidence?
+  verifier_where_oracle_pad: null   # seconds; set = answer from key_spans +- pad instead of the verifier
+  evidence_pad: 3.0            # evidence = key_spans +- this (labels of all roles, the evidence expert, process metrics)
+  evidence_refine_frac: 0.25   # "small part of the window": evidence covers less than this share (expert: refine)
+  label_no_fill: true          # verifier Q3 labels on overview + selected frames only (what the verifier sees)
+  flow: v3
+  answer_frames: 32
+  answer_overview: null
+  fill_grid: 128
+  inspect_min_gap: 0
+  verifier_points:
+  - overview
+  switch_tau: 0
+  tentative: true
+  keep_delta: null
+  keep_p3: 0.5
+  max_attempts: null           # no separate inspection-attempt budget (window tree: total actions only)
+  tentative_random_keep: []
+  tentative_keep_prob: null
+  tentative_force_switch: false
+  backfill_per_window: 1
+  verifier_line: true
+  locator_line: false          # no locator probe line (the verifier's "where" line covers it)
+  locator_line_top: 3
+  locrule_margin: 0.3
+  verifier_neutral: true
+  verifier_shuffle: true
+  verifier_line_full: true
+  relocalize_exclude_searched: true
+  inspect_text_budget_free: true
+reader:
+  engine: vllm
+  vision_cache_mb: 512        # frozen Qwen3-VL base + DeepStack features; 0 disables
+  vllm:                      # isolated frozen reader; never used for policy SFT/RL gradients
+    python: null             # or VLLM_PYTHON; must contain vLLM + matching Torch/Transformers
+    max_model_len: 32768
+    max_num_seqs: null        # scheduling concurrency; null inherits reader.batch_size
+    gpu_memory_utilization: 0.55
+    trainer_gpu_memory_utilization: 0.30 # RL rollout worker on the trainer's GPU (policy set, learner, NCCL buffers there)
+    filter_max_model_len: 131072 # VTS alone can feed 256 frames; never shorten its inputs to the agent's 32-frame budget
+    filter_gpu_memory_utilization: 0.85 # no OneJev training/rollout models share the VTS GPU
+    max_num_batched_tokens: 8192
+    enforce_eager: false
+  model: reader_qwen3vl8b       # answerer = Qwen3-VL-8B (VTS filter uses it too)
+  dtype: bfloat16
+  attn_implementation: flash_attention_2
+  device: null
+  sdpa_backend: null
+  frame_visual_tokens: null
+  frame_min_visual_tokens: 4
+  decider_frame_visual_tokens: null
+  context_tokens: null
+  visual_tokens: null
+  obs_prompt:
+    reader: selfassess3
+    reader_qwen3vl8b: v1
+  observation_max_new_tokens: 256
+  answer_max_new_tokens: 64
+  answer_fallback: letter_logits
+  answer_intro: true
+  video_fps: real
+  answer_input: image
+  answer_prompt: direct
+  batch_size: 8
+  do_sample: false
+policy:
+  init: qwen35_4b
+  qwen35_model: onejev_4b      # policy = OmniJev/OneJev-4B (backbone + vision tower)
+  readout: letters             # OneJev letter readout (src/policy/letters.py)
+  finetune: lora
+  frame_tokens: qwen_native
+  attn_implementation: flash_attention_2
+  sdpa_backend: null
+  prefix_sharing: true
+  prefix_sharing_train: true
+  static_prefix_cache: true    # reuse the static prefix across decisions during collection / RL rollouts / evaluation
+  static_prefix_cache_max: 32
+  deduplicate_inference: true
+  max_shared_tokens_per_forward: 4096
+  train_microbatch_decisions: 2 # RL single-question letter readout: full prompts with activation checkpointing
+  train_microbatch_tokens: 8192
+  native_side: 256
+  strip_vestigial: false
+  candidate_vis: false
+  visual_mode: normal
+  autocast: bfloat16
+  gradient_checkpointing: true
+  vis_dim: 768
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0
+    targets:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - in_proj_qkv
+    - in_proj_z
+    - in_proj_a
+    - in_proj_b
+    - out_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  max_paths_per_forward: 64
+  max_tokens_per_forward: 98304
+  siglip_prior: false
+  prior_gate_init: 0.35
+rollout:
+  group_size: 4
+  temperature: 1.0
+  questions_per_update: 2
+  max_retries: 2
+sft:
+  lora_lr: 1.0e-04              # 1e-4 + warmup + cosine (check with --overfit before the full run)
+  new_lr: 0.0001
+  backbone_lr: 1.0e-05
+  weight_decay: 0.0
+  grad_clip: 1.0
+  steps: 50
+  decisions_per_step: 16
+  microbatch_decisions: 2      # local forward/backward batch; global optimizer batch remains 16 decisions
+  microbatch_tokens: 8192     # padded prompt footprint; oversized individual decisions still run alone
+  eval_microbatch_decisions: null  # dev passes (forward only, no activations kept): null = the training limits
+  eval_microbatch_tokens: null
+  eval_every: 1000             # full dev pass + snapshot every N steps (2026-10-06 review: 10 dominated the run time;
+                               # 200 -> 1000)
+  snapshot_every: 0
+  warmup_steps: 50             # linear LR warmup
+  lr_schedule: cosine          # constant | cosine (to min_lr_ratio x lr at the last step)
+  min_lr_ratio: 0.1
+  early_stop_patience: 2        # stop after 2 dev evaluations without improvement (0 = off); 2 x 1000 steps
+  early_stop_min_delta: 0.0     # an evaluation counts as a new best only above best + this
+rl:                           # scripts/train_branch_rl.py reads only grad_clip here; lr, clip, KL, updates, group size
+  grad_clip: 1.0               # ... are its command-line arguments (2026-10-06 review: the other keys were never read)

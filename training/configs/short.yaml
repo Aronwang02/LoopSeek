@@ -1,0 +1,14 @@
+# Short-video profile of the mixed long + short training (SHORT_VIDEO=1): scripts/train_pipeline.sh puts it over $CFG
+# for the short-video collections. Everything of the long-video budget halved:
+# answer 16 frames = 8 overview + up to 8 kept (2 inspections x 4 frames), 16 candidates per window, 8 frames for the
+# locator context / the "where" question (long video: 16 + 16 = 2 x 8, 32 candidates, 16 frames).
+video:
+  global_frames: 8             # overview
+  refine_frames: 8             # locator context below level 1 and the "where" question's window frames (A01..A08)
+budget:
+  kept_frames: 8               # kept-frame cap; final set = 8 overview + these
+  frames_per_inspect: 4        # frames picked per inspection
+  frame_candidates: 16         # candidate grid per inspection range
+  answer_frames: 16
+  reader_retained_frames: 16
+  evidence_pad: 3.0            # QVH videos ~150 s: +-15 s would make ~40% of the video "evidence" (quarter = 37 s)

@@ -1,0 +1,8 @@
+# Two GPUs per inference process, for GPUs with less than 80 GB (e.g. 40 or 48 GB): execution only, over
+# configs/default.yaml + configs/loopseek.yaml; no decision, budget or answer setting changes.
+# The policy (OneJev-4B + the LoRA roles; about 30 GB peak with 8 questions in flight) runs on cuda:0, the first GPU of
+# CUDA_VISIBLE_DEVICES=a,b, and System II (Qwen3-VL-8B in vLLM: about 17.5 GB of bf16 weights + KV cache) on cuda:1.
+reader:
+  device: cuda:1
+  vllm:
+    gpu_memory_utilization: 0.85

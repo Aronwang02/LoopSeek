@@ -1,0 +1,19 @@
+# Batch settings of the paper's System I training on 8 GPUs (80 GB of memory or more each), 32 frames per question.
+# Use it over the defaults:  CFG="configs/default.yaml configs/train_8gpu.yaml"
+# sft.decisions_per_step and sft.warmup_steps change the optimization (global batch 32 decisions, 25 warm-up steps);
+# the other values only size the micro-batches and the answerer's batches to the GPU memory.
+policy:
+  train_microbatch_decisions: 4
+  train_microbatch_tokens: 16384
+reader:
+  batch_size: 4
+  vllm:
+    max_num_batched_tokens: 16384
+    max_num_seqs: 8
+sft:
+  decisions_per_step: 32
+  warmup_steps: 25
+  microbatch_decisions: 4
+  microbatch_tokens: 16384
+  eval_microbatch_decisions: 8
+  eval_microbatch_tokens: 32768
