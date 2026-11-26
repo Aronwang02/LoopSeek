@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LoopSeek: Decoupling System One Search from System Two Answering for Long Video Understanding</title>
+  <meta name="description" content="LoopSeek decouples evidence search from answering in long video question answering: four non-thinking System I agents search a tree of video windows with typed decisions, and a frozen System II answers once from the selected frames.">
+  <meta name="author" content="Chengzhong Wang, Lang Lin, Xinyang Liu, Yueqin Yin, Mingyuan Zhou, Shengwei An">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LoopSeek: Decoupling System One Search from System Two Answering for Long Video Understanding">
+  <meta property="og:description" content="LoopSeek decouples evidence search from answering in long video question answering: four non-thinking System I agents search a tree of video windows with typed decisions, and a frozen System II answers once from the selected frames.">
+  <meta property="og:url" content="https://aronwang02.github.io/LoopSeek/">
+  <meta property="og:image" content="https://aronwang02.github.io/LoopSeek/static/images/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="icon" href="static/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <h1 class="title"><span class="name">LoopSeek</span>: Decoupling System One Search from System Two Answering for Long Video Understanding</h1>
+      <p class="authors">
+        <span><a href="https://aronwang02.github.io/" target="_blank" rel="noopener">Chengzhong Wang</a><sup>1,*</sup></span>
+        <span><a href="https://swindblowing.github.io/homepage/" target="_blank" rel="noopener">Lang Lin</a><sup>2,*</sup></span>
+        <span><a href="https://xinyangatk.github.io/" target="_blank" rel="noopener">Xinyang Liu</a><sup>2</sup></span>
+        <span><a href="https://yinyueqin.github.io/" target="_blank" rel="noopener">Yueqin Yin</a><sup>2</sup></span>
+        <span><a href="https://mingyuanzhou.github.io/" target="_blank" rel="noopener">Mingyuan Zhou</a><sup>2</sup></span>
+        <span><a href="https://answ.in/" target="_blank" rel="noopener">Shengwei An</a><sup>1,&dagger;</sup></span>
+      </p>
+      <p class="affils"><span><sup>1</sup>Virginia Tech</span><span><sup>2</sup>University of Texas at Austin</span></p>
+      <p class="notes"><sup>*</sup>Equal contribution&ensp;&ensp;<sup>&dagger;</sup>Corresponding author</p>
+      <nav class="links" aria-label="Paper links">
+        <a class="btn" href="https://arxiv.org/abs/2611.28635"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 16l4-8 4 8M9.5 13h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>arXiv</span></a>
+        <a class="btn" href="https://arxiv.org/pdf/2611.28635"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l6 6v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 2v6h6M9 13h6M9 17h6" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Paper</span></a>
+        <a class="btn" href="https://github.com/Aronwang02/LoopSeek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Code</span></a>
+        <a class="btn" href="https://huggingface.co/Chengzhong-Wang/LoopSeek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M4 7.5l8 4.5 8-4.5 M12 12v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Model</span></a>
+        <a class="btn" href="#bibtex"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h4v4c0 3-1.5 5-4 6M15 7h4v4c0 3-1.5 5-4 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>BibTeX</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="teaser">
+      <div class="container">
+        <figure>
+          <picture><source srcset="static/images/teaser.webp" type="image/webp"><img src="static/images/teaser.png" alt="A generative agent and LoopSeek on the same LVBench question" width="3840" height="1365" loading="lazy"></picture>
+          <figcaption><strong>Decoupling search from answering.</strong> On an LVBench question, a generative agent (left) reasons in text at every turn, localizes the moment once, at a clip about 36 minutes away from the evidence, and answers wrongly. LoopSeek (right) makes decisions without text: its search enters three wrong windows, switches away from each, reaches the evidence, and keeps 8 frames inside it; the frozen System II then answers once. GPU time includes frame selection policy and answering.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band" id="abstract">
+      <div class="container narrow">
+        <h2>Abstract</h2>
+        <p class="abstract">Long video question answering requires finding relevant evidence before reasoning over it. With a limited frame budget, single-pass frame selection can miss critical evidence, while adaptive search often relies on repeated text generation to decide where to look. We introduce LoopSeek, a framework that decouples evidence search from answer generation through a division of labor between a non-thinking System I and a generative System II. Our key insight is that search can be expressed as a sequence of small, typed decisions, allowing System I to find the evidence that System II needs. Four System I role agents navigate a tree of video windows and coordinate through probability outputs to select frames, assess evidence, and revise the search without generating text. To align search with System II, System I learns from annotated evidence on questions that System II answers correctly only from that evidence, and the <span class="sc">Verifier</span>&rsquo;s evidence estimates steer the search without calling System II, which stays frozen and answers once from the selected frames. On five long-video benchmarks, with a frozen Qwen3-VL-8B reading 32 frames, LoopSeek improves average accuracy from 53.5 to 63.9 over the uniform baseline and takes 32&ndash;80% less GPU time per question than agentic methods.</p>
+      </div>
+    </section>
+
+    <section id="method">
+      <div class="container">
+        <h2>How LoopSeek Searches</h2>
+        <figure class="anim-fig">
+          <div id="ov-anim"></div>
+          <div class="static-when-js"><picture><source srcset="static/images/overview.webp" type="image/webp"><img src="static/images/overview.png" alt="Overview of LoopSeek" width="3840" height="1159" loading="lazy"></picture></div>
+          <figcaption><strong>Overview of LoopSeek.</strong> System I judges the overview frames and searches a tree of windows over the video. At each step, the <span class="sc">Controller</span> reads the <span class="sc">Verifier</span>&rsquo;s judgments and the remaining budget and picks an action. The <span class="sc">Locator</span> picks the next window, the <span class="sc">Selector</span> picks frames in the active window, and the <span class="sc">Verifier</span> keeps the frames that show evidence and judges where the evidence lies. After the search is complete, System II answers once, from the selected overview frames and the kept frames.</figcaption>
+          <details class="paper-fig"><summary>Static figure from the paper (Fig. 2)</summary><picture><source srcset="static/images/overview.webp" type="image/webp"><img src="static/images/overview.png" alt="Overview of LoopSeek" width="3840" height="1159" loading="lazy"></picture></details>
+        </figure>
+        <div class="narrow prose">
+          <p>LoopSeek consists of System I, which searches the video and gathers the evidence for the question, and System II, a frozen answerer that answers once from the gathered frames. System I has four role agents. The <span class="sc">Controller</span> plans the search, the <span class="sc">Locator</span> and <span class="sc">Selector</span> ground it, and the <span class="sc">Verifier</span> checks what has been found. Each agent answers a typed question by picking the most likely option, so no decision generates text.</p>
+          <p>The video is a tree of windows: the root is the whole video, and every window splits into equal children. The search always begins with <code>Refine</code> and stops when the kept frames reach the budget, the action budget runs out, or no action is legal. At each step the <span class="sc">Controller</span> picks one of four actions:</p>
+        </div>
+        <div class="actions">
+          <div class="card"><h3><code>Refine</code></h3><p>The <span class="sc">Locator</span> picks the next window among the unvisited children of the active window.</p></div>
+          <div class="card"><h3><code>Switch</code></h3><p>The <span class="sc">Locator</span> picks the next window among the unvisited siblings of the active window.</p></div>
+          <div class="card"><h3><code>Up</code></h3><p>The search returns to the parent of the active window.</p></div>
+          <div class="card"><h3><code>Inspect</code></h3><p>The <span class="sc">Selector</span> picks frames in the active window, and the <span class="sc">Verifier</span> keeps those that show the evidence.</p></div>
+        </div>
+        <div class="narrow prose">
+          <p><strong>Learning from an evidence expert.</strong> Since System I never invokes System II during search, it must learn to locate what System II needs from the evidence alone. Following VTS, training uses questions that System II answers correctly from frames inside the annotated evidence, but not from the question alone or from frames outside it. All labels come from that evidence: the <span class="sc">Locator</span>, <span class="sc">Selector</span>, and <span class="sc">Verifier</span> are labeled directly from it, and the <span class="sc">Controller</span> imitates an expert that has access to it.</p>
+          <p>System I makes an average of 16.7 decisions per question, each requiring only one forward pass through a 4B-parameter model without text generation, while System II is invoked only once for answering.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="results">
+      <div class="container">
+        <h2>Results</h2>
+        <div class="stats">
+          <div class="stat"><div class="num">53.5 &rarr; 63.9</div><div>average accuracy over five benchmarks, uniform sampling vs. LoopSeek, frozen Qwen3-VL-8B reading 32 frames</div></div>
+          <div class="stat"><div class="num">21 / 25</div><div>answerer&ndash;benchmark combinations where LoopSeek is best or tied-best</div></div>
+          <div class="stat"><div class="num">32&ndash;80%</div><div>less GPU time per question than agentic methods</div></div>
+        </div>
+        <h3 class="table-title">Accuracy (%) grouped by answerer</h3>
+        <div class="table-grid"><div class="tg-cell"><div class="tg-name">Qwen3-VL-8B</div><div class="table-wrap"><table class="results tg"><thead><tr><th>Method</th><th>Frames</th><th title="Video-MME">V-MME</th><th>MLVU</th><th>LVBench</th><th title="LongVideoBench">LongVB</th><th title="CG-Bench">CG</th><th>Avg.</th></tr></thead><tbody><tr class="muted"><td>Uniform<sup>&dagger;</sup></td><td>32</td><td>63.9</td><td>63.7</td><td>39.1</td><td>60.4</td><td>40.7</td><td>53.5</td></tr><tr><td>ReFoCUS<sup>&dagger;</sup></td><td>32</td><td>68.5</td><td>72.5</td><td>49.3</td><td>63.3</td><td><u>48.1</u></td><td>60.3</td></tr><tr><td>VideoITG<sup>&dagger;</sup></td><td>32</td><td><strong>68.9</strong></td><td>75.8</td><td><u>53.5</u></td><td>63.6</td><td>47.3</td><td><u>61.8</u></td></tr><tr><td>ReMem<sup>&dagger;</sup></td><td>32</td><td><u>68.8</u></td><td><u>77.6</u></td><td>53.3</td><td><u>64.4</u></td><td>&ndash;</td><td>&ndash;</td></tr><tr><td>SVAgent</td><td>&le;32</td><td>63.1</td><td>&ndash;</td><td>40.8</td><td>61.0</td><td>&ndash;</td><td>&ndash;</td></tr><tr><td>RACER</td><td>32</td><td>67.9</td><td>73.5</td><td>&ndash;</td><td>64.0</td><td>&ndash;</td><td>&ndash;</td></tr><tr class="ours"><td>LoopSeek (ours)</td><td>32</td><td><strong>68.9</strong></td><td><strong>77.7</strong></td><td><strong>54.0</strong></td><td><strong>67.5</strong></td><td><strong>51.4</strong></td><td><strong>63.9</strong></td></tr></tbody></table></div></div><div class="tg-cell"><div class="tg-name">Qwen2.5-VL-7B</div><div class="table-wrap"><table class="results tg"><thead><tr><th>Method</th><th>Frames</th><th title="Video-MME">V-MME</th><th>MLVU</th><th>LVBench</th><th title="LongVideoBench">LongVB</th><th title="CG-Bench">CG</th><th>Avg.</th></tr></thead><tbody><tr class="muted"><td>Uniform<sup>&dagger;</sup></td><td>32</td><td>62.4</td><td>60.8</td><td>37.8</td><td>57.9</td><td>35.4</td><td>50.9</td></tr><tr><td>T*</td><td>32</td><td>56.3</td><td>58.1</td><td>37.7</td><td>57.4</td><td>35.8</td><td>49.1</td></tr><tr><td>A.I.R.</td><td>&le;32</td><td><strong>65.0</strong></td><td><u>67.5</u></td><td>42.3</td><td><u>61.4</u></td><td><u>44.6</u></td><td><u>56.2</u></td></tr><tr><td>VideoMind</td><td>&le;32</td><td>60.7</td><td>64.7</td><td><u>45.2</u></td><td>57.6</td><td>39.4</td><td>53.5</td></tr><tr><td>Video-MTR<sup>&loz;</sup></td><td>&le;32</td><td>59.0</td><td>58.0</td><td>38.2</td><td>52.3</td><td>33.7</td><td>48.3</td></tr><tr><td>Conan-7B<sup>&loz;</sup></td><td>32</td><td>60.5</td><td>61.6</td><td>39.2</td><td>56.6</td><td>39.1</td><td>51.4</td></tr><tr><td>SVAgent</td><td>&le;32</td><td>61.2</td><td>&ndash;</td><td>40.6</td><td>60.7</td><td>&ndash;</td><td>&ndash;</td></tr><tr class="ours"><td>LoopSeek (ours)</td><td>32</td><td><u>64.7</u></td><td><strong>69.2</strong></td><td><strong>49.7</strong></td><td><strong>65.3</strong></td><td><strong>47.3</strong></td><td><strong>59.3</strong></td></tr></tbody></table></div></div><div class="tg-cell"><div class="tg-name">Qwen2-VL-7B</div><div class="table-wrap"><table class="results tg"><thead><tr><th>Method</th><th>Frames</th><th title="Video-MME">V-MME</th><th>MLVU</th><th>LVBench</th><th title="LongVideoBench">LongVB</th><th title="CG-Bench">CG</th><th>Avg.</th></tr></thead><tbody><tr class="muted"><td>Uniform<sup>&dagger;</sup></td><td>32</td><td>58.0</td><td>60.3</td><td>39.3</td><td>55.3</td><td>32.2</td><td>49.0</td></tr><tr><td>FOCUS<sup>&dagger;</sup></td><td>32</td><td>59.7</td><td>65.4</td><td><u>47.5</u></td><td><u>62.3</u></td><td>38.9</td><td><u>54.8</u></td></tr><tr><td>A.I.R.</td><td>&le;32</td><td><u>60.0</u></td><td><u>66.6</u></td><td>45.6</td><td>58.9</td><td><u>42.0</u></td><td>54.6</td></tr><tr><td>VideoMiner</td><td>32</td><td>58.4</td><td>65.1</td><td>&ndash;</td><td>56.4</td><td>&ndash;</td><td>&ndash;</td></tr><tr><td>VideoMind</td><td>&le;32</td><td>58.0</td><td>62.7</td><td>40.8</td><td>56.3</td><td>38.4</td><td>51.2</td></tr><tr class="ours"><td>LoopSeek (ours)</td><td>32</td><td><strong>63.6</strong></td><td><strong>70.5</strong></td><td><strong>49.1</strong></td><td><strong>62.7</strong></td><td><strong>45.7</strong></td><td><strong>58.3</strong></td></tr></tbody></table></div></div><div class="tg-cell"><div class="tg-name">LLaVA-OneVision-7B</div><div class="table-wrap"><table class="results tg"><thead><tr><th>Method</th><th>Frames</th><th title="Video-MME">V-MME</th><th>MLVU</th><th>LVBench</th><th title="LongVideoBench">LongVB</th><th title="CG-Bench">CG</th><th>Avg.</th></tr></thead><tbody><tr class="muted"><td>Uniform<sup>&dagger;</sup></td><td>32</td><td>58.4</td><td>63.1</td><td>39.3</td><td>56.5</td><td>31.4</td><td>49.8</td></tr><tr><td>BOLT<sup>&dagger;</sup></td><td>32</td><td>59.9</td><td>66.8</td><td>42.7</td><td>59.6</td><td>35.6</td><td>52.9</td></tr><tr><td>FOCUS<sup>&dagger;</sup></td><td>32</td><td>58.3</td><td>64.9</td><td><u>45.9</u></td><td>60.7</td><td>35.1</td><td>53.0</td></tr><tr><td>ReFoCUS<sup>&dagger;</sup></td><td>32</td><td><strong>62.6</strong></td><td>68.5</td><td>45.8</td><td><u>61.0</u></td><td><u>37.6</u></td><td><u>55.1</u></td></tr><tr><td>A.I.R.</td><td>&le;32</td><td>61.4</td><td><u>69.3</u></td><td>45.1</td><td>60.7</td><td>37.1</td><td>54.7</td></tr><tr class="ours"><td>LoopSeek (ours)</td><td>32</td><td><u>62.3</u></td><td><strong>70.6</strong></td><td><strong>47.6</strong></td><td><strong>62.2</strong></td><td><strong>38.7</strong></td><td><strong>56.3</strong></td></tr></tbody></table></div></div><div class="tg-cell"><div class="tg-name">InternVL3-8B</div><div class="table-wrap"><table class="results tg"><thead><tr><th>Method</th><th>Frames</th><th title="Video-MME">V-MME</th><th>MLVU</th><th>LVBench</th><th title="LongVideoBench">LongVB</th><th title="CG-Bench">CG</th><th>Avg.</th></tr></thead><tbody><tr class="muted"><td>Uniform<sup>&dagger;</sup></td><td>32</td><td>64.9</td><td>68.8</td><td>43.9</td><td>58.7</td><td>42.7</td><td>55.8</td></tr><tr><td>ReFoCUS<sup>&dagger;</sup></td><td>32</td><td><u>67.0</u></td><td>72.7</td><td>50.0</td><td>62.0</td><td><u>48.1</u></td><td>60.0</td></tr><tr><td>A.I.R.</td><td>&le;32</td><td><strong>68.2</strong></td><td><strong>74.5</strong></td><td><u>50.3</u></td><td><u>62.8</u></td><td>47.9</td><td><u>60.7</u></td></tr><tr><td>VideoMind</td><td>&le;32</td><td>64.2</td><td>66.5</td><td>42.3</td><td>59.7</td><td>43.0</td><td>55.1</td></tr><tr class="ours"><td>LoopSeek (ours)</td><td>32</td><td>65.4</td><td><u>74.1</u></td><td><strong>51.0</strong></td><td><strong>64.3</strong></td><td><strong>50.1</strong></td><td><strong>61.0</strong></td></tr></tbody></table></div></div></div>
+        <p class="table-note">Each table is one answerer (named above it), which answers from the frames that each method in its table selects. <sup>&dagger;</sup>Picks frames in a single pass; unmarked methods search over multiple rounds, iteratively or as agents. Frames: number of frames that the answerer reads. Avg.: mean of the five benchmarks. V-MME: Video-MME; LongVB: LongVideoBench; CG: CG-Bench. &ndash;: not reported in the paper, and the code or weights are not released. ReMem parses the question with GPT-4o. <sup>&loz;</sup>Answers with a model fine-tuned from the answerer. <strong>Bold</strong>: best in table, ties included; <u>underline</u>: second best.</p>
+        <h3 class="table-title">GPU seconds per question</h3>
+        <div class="table-wrap">
+          <table class="results compact"><thead><tr><th rowspan="2">Method</th><th colspan="2">MLVU</th><th colspan="2">LVBench</th></tr><tr><th>Search</th><th>Total</th><th>Search</th><th>Total</th></tr></thead><tbody><tr class="ours"><td>LoopSeek (ours)</td><td><strong>2.59</strong></td><td><strong>3.41</strong></td><td><strong>3.35</strong></td><td><strong>3.96</strong></td></tr><tr><td>VideoMind-7B</td><td>3.63</td><td>5.04</td><td>4.54</td><td>6.13</td></tr><tr><td>VTS-8B</td><td>9.98</td><td>11.16</td><td>18.73<sup>a</sup></td><td>19.92<sup>a</sup></td></tr><tr><td>Conan-7B</td><td>&ndash;</td><td>16.51</td><td>&ndash;</td><td>16.13</td></tr><tr><td>ReFoCUS-1.3B</td><td>4.42</td><td>&ndash;</td><td>4.38</td><td>&ndash;</td></tr></tbody></table>
+        </div>
+        <p class="table-note">One H200, batch size 1, the same 1000 questions per benchmark (<sup>a</sup>218). Search: work before the answer, with vision encoding. Total: search and answer.</p>
+      </div>
+    </section>
+
+    <section id="examples">
+      <div class="container">
+        <h2>Search Examples</h2>
+        <p class="narrow prose">Three searches on LVBench, whose time references give the annotated evidence. Each replay follows the actions of the <span class="sc">Controller</span> on the window tree: visited windows are blue, and the active window has a blue outline. The timeline shows where the active window lies in the video, with the annotated evidence in red; the search itself does not see it. After the inspections, the 8 kept frames appear (red border: inside the evidence), then the answers of System II with all 32 frames and with the 24 overview frames alone.</p>
+        <div class="ex-player" id="ex-player">
+          <div class="ex-text" data-key="direct">
+            <h3>Direct narrowing <span class="where">(LVBench, uid 4600)</span></h3>
+            <p>Three <code>Refine</code> actions narrow the 2,032&thinsp;s video to a 32&thinsp;s window that holds the evidence (547&ndash;560&thinsp;s), and two inspections keep 8 frames, all inside it. Two of them show the card that the judge draws, the seven of clubs. With the overview frames alone, System II answers Spade 9.</p>
+          </div>
+          <div class="ex-text" data-key="switch">
+            <h3>Recovery with <code>Switch</code> <span class="where">(LVBench, uid 362)</span></h3>
+            <p>The first window, 0&ndash;1098&thinsp;s, holds no evidence, and the <span class="sc">Controller</span> switches to 2197&ndash;3295&thinsp;s. The child that it then refines into holds no evidence either, and two more <code>Switch</code> actions lead to 2471&ndash;2746&thinsp;s, which does. Two <code>Refine</code> actions then reach a 17&thinsp;s window, and all 8 kept frames lie in the evidence (2531&ndash;2557&thinsp;s); they show the toad driving the car. With the overview frames alone, System II answers that the toad chases the car.</p>
+          </div>
+          <div class="ex-text" data-key="up">
+            <h3>Recovery with <code>Up</code> <span class="where">(LVBench, uid 4705)</span></h3>
+            <p>Three <code>Refine</code> actions go down to 576&ndash;672&thinsp;s, far from the evidence (3640&ndash;3645&thinsp;s, 0.08% of the video). The <span class="sc">Controller</span> then takes two <code>Up</code> actions back to 0&ndash;1536&thinsp;s and switches to 3071&ndash;4607&thinsp;s, which holds the evidence; <code>Switch</code> alone moves only among the siblings of the active window and could not leave 384&ndash;768&thinsp;s. Three <code>Refine</code> actions then reach a 24&thinsp;s window, and two inspections keep 8 frames, 3 of them inside the evidence; two of these show the subtitle &ldquo;Then it&rsquo;s 4 &lsquo;woofs&rsquo; for Chico!&rdquo;. With the overview frames alone, System II answers Three.</p>
+          </div>
+        </div>
+        <details class="paper-fig"><summary>Static figures from the paper (App. E)</summary>
+          <figure class="example">
+            <h3>Direct narrowing <span class="where">(LVBench, uid 4600)</span></h3>
+            <picture><source srcset="static/images/supp_ex_direct.webp" type="image/webp"><img src="static/images/supp_ex_direct.png" alt="Direct narrowing example" width="3840" height="1565" loading="lazy"></picture>
+          </figure>
+          <figure class="example">
+            <h3>Recovery with <code>Switch</code> <span class="where">(LVBench, uid 362)</span></h3>
+            <picture><source srcset="static/images/supp_ex_switch.webp" type="image/webp"><img src="static/images/supp_ex_switch.png" alt="Recovery with Switch example" width="3840" height="1921" loading="lazy"></picture>
+          </figure>
+          <figure class="example">
+            <h3>Recovery with <code>Up</code> <span class="where">(LVBench, uid 4705)</span></h3>
+            <picture><source srcset="static/images/supp_ex_up.webp" type="image/webp"><img src="static/images/supp_ex_up.png" alt="Recovery with Up example" width="3840" height="1827" loading="lazy"></picture>
+          </figure>
+        </details>
+      </div>
+    </section>
+
+    <section class="band" id="bibtex">
+      <div class="container narrow">
+        <h2>BibTeX</h2>
+        <div class="bib">
+          <button type="button" class="copy" id="copy-bib">Copy</button>
+          <pre><code id="bib-text">@article{wang2026loopseek,
+  title   = {LoopSeek: Decoupling System One Search from System Two Answering for Long Video Understanding},
+  author  = {Wang, Chengzhong and Lin, Lang and Liu, Xinyang and Yin, Yueqin and Zhou, Mingyuan and An, Shengwei},
+  journal = {arXiv preprint arXiv:2611.28635},
+  year    = {2026}
+}</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">Layout follows the style of the <a href="https://nerfies.github.io/">Nerfies</a> project page.</div>
+  </footer>
+
+  <script src="static/js/loopseek-data.js"></script>
+  <script src="static/js/loopseek.js"></script>
+  <script>
+    document.getElementById('copy-bib').addEventListener('click', function () {
+      var b = this, t = document.getElementById('bib-text').textContent;
+      function done() { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); }
+      if (navigator.clipboard) { navigator.clipboard.writeText(t).then(done, function () {}); }
+    });
+  </script>
+</body>
+</html>
